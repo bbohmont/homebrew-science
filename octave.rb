@@ -81,6 +81,10 @@ class Octave < Formula
     # avoid spurious 'invalid assignment to cs-list' erorrs on 32 bit installs:
     args << 'CXXFLAGS=-O0' unless MacOS.prefer_64_bit?
 
+    # Use the keg-only readline from Homebrew
+    args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib'"
+    args << "CPPFLAGS='-I#{HOMEBREW_PREFIX}/opt/readline/include'"
+
     # The fix for std::unordered_map requires regenerating
     # configure. Remove once the fix is in next release.
     system "autoreconf", "-ivf"
