@@ -108,12 +108,24 @@ class Octave < Formula
     args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib -L#{HOMEBREW_PREFIX}/opt/llvm/lib'"
     args << "CPPFLAGS='-I#{HOMEBREW_PREFIX}/opt/readline/include -I#{HOMEBREW_PREFIX}/opt/llvm/include'"
 
+    # Find llvm-config executable
+    args << "LLVM_CONFIG='#{HOMEBREW_PREFIX}/Cellar/llvm/3.3/bin'"
+
+
+    # From MacPorts:
+    # In 10.8+, the LANG environment variable needs to be set to
+    # "C" otherwise /usr/bin/sed fails with an error.  Ideally,
+    # octave's build system would honor the environment variable
+    # ${SED} throughout; reality is that it does not, so this
+    # addition is required because /usr/bin/sed will be used.
+    args << "LANG=C"
+
     # The fix for std::unordered_map requires regenerating
     # configure. Remove once the fix is in next release.
     system "autoreconf", "-ivf"
 
     system "./configure", *args
-    system "make all"
+    system "make all", "LANG=C"
     system "make check 2>&1 | tee make-check.log" if build.include? 'test'
     system "make install"
 
