@@ -31,7 +31,8 @@ class Octave < Formula
 
   # additional features
   depends_on 'suite-sparse'
-  depends_on 'glpk'
+  # The API was changed in glpk-4.49
+  depends_on 'glpk448'
   depends_on 'graphicsmagick' => :recommended
   depends_on 'hdf5'
   depends_on 'pcre'
@@ -86,6 +87,10 @@ class Octave < Formula
       "--with-blas=#{blas_flags}",
       # SuiteSparse-4.x.x fix, see http://savannah.gnu.org/bugs/?37031
       "--with-umfpack=-lumfpack -lsuitesparseconfig",
+      # Use the keg-only glpk-4.48
+      "--with-glpk='-lglpk'",
+      "--with-glpk-includedir=#{HOMEBREW_PREFIX}/opt/glpk448/include",
+      "--with-glpk-libdir=#{HOMEBREW_PREFIX}/opt/glpk448/lib",
     ]
     args << "--without-framework-carbon" if MacOS.version >= :lion
     # avoid spurious 'invalid assignment to cs-list' erorrs on 32 bit installs:
