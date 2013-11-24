@@ -85,6 +85,7 @@ class Octave < Formula
       "--disable-dependency-tracking",
       "--prefix=#{prefix}",
       "--with-blas=#{blas_flags}",
+      "--without-x",
       # SuiteSparse-4.x.x fix, see http://savannah.gnu.org/bugs/?37031
       "--with-umfpack=-lumfpack -lsuitesparseconfig",
       # Use the keg-only glpk-4.48
@@ -103,9 +104,9 @@ class Octave < Formula
       args << "--with-opengl"
     end
 
-    # Use the keg-only readline from Homebrew
-    args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib'"
-    args << "CPPFLAGS='-I#{HOMEBREW_PREFIX}/opt/readline/include'"
+    # Use the keg-only readline and llvm from Homebrew
+    args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib -L#{HOMEBREW_PREFIX}/opt/llvm/lib'"
+    args << "CPPFLAGS='-I#{HOMEBREW_PREFIX}/opt/readline/include -I#{HOMEBREW_PREFIX}/opt/llvm/include'"
 
     # The fix for std::unordered_map requires regenerating
     # configure. Remove once the fix is in next release.
