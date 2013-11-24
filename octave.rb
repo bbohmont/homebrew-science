@@ -55,6 +55,16 @@ class Octave < Formula
     # Pull upstream patch to fix configure script on std::unordered_map
     # detection.
     'http://hg.savannah.gnu.org/hgweb/octave/raw-rev/26b2983a8acd'
+    # MacPorts patches
+    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-configure.diff' }
+    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-eigs-base.cc.diff' }
+    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-regexp.h.diff' }
+
+    # 10.7+ requires an extra patch; this patch will break the
+    # build on 10.6 and prior, so apply it only under 10.7.
+    if MacOS.version >= :lion
+      { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-src-display.cc.diff' }
+    end
   end
 
   def blas_flags
@@ -80,6 +90,13 @@ class Octave < Formula
     args << "--without-framework-carbon" if MacOS.version >= :lion
     # avoid spurious 'invalid assignment to cs-list' erorrs on 32 bit installs:
     args << 'CXXFLAGS=-O0' unless MacOS.prefer_64_bit?
+
+    # Taken from MacPorts
+    if build.include? 'without-fltk'
+      args << "--without-opengl"
+    else
+      args << "--with-opengl"
+    end
 
     # Use the keg-only readline from Homebrew
     args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib'"
