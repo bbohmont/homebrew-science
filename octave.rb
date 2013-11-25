@@ -57,8 +57,12 @@ class Octave < Formula
     # detection.
     'http://hg.savannah.gnu.org/hgweb/octave/raw-rev/26b2983a8acd'
     # MacPorts patches
+    # 1) fix std::unordered map
     { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-configure.diff' }
+    # 2) static keywords a problem with clang 3.0 or later
+    # https://mailman.cae.wisc.edu/pipermail/octave-maintainers/2012-June/028505.html
     { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-eigs-base.cc.diff' }
+    # 3) fix type declaration from struct to class
     { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-regexp.h.diff' }
 
     # 10.7+ requires an extra patch; this patch will break the
