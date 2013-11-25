@@ -66,6 +66,10 @@ class Octave < Formula
     if MacOS.version >= :lion
       { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-src-display.cc.diff' }
     end
+
+    # Force scripts/mk-pkg-add to use gsed
+    # Unknown as to why it forgets the SED='/usr/local/bin/gsed'
+    DATA
   end
 
   def blas_flags
@@ -86,6 +90,7 @@ class Octave < Formula
       "--prefix=#{prefix}",
       "--with-blas=#{blas_flags}",
       "--without-x",
+      "--enable-docs=no",
       # SuiteSparse-4.x.x fix, see http://savannah.gnu.org/bugs/?37031
       "--with-umfpack=-lumfpack -lsuitesparseconfig",
       # Use the keg-only glpk-4.48
@@ -161,3 +166,17 @@ class Octave < Formula
     s = native_caveats + s unless build.include? 'without-fltk'
   end
 end
+
+__END__
+diff --git a/scripts/mk-pkg-add b/scripts/mk-pkg-add
+index 383bf1d..ed36c44 100755
+--- a/scripts/mk-pkg-add
++++ b/scripts/mk-pkg-add
+@@ -32,6 +32,6 @@ do
+   if [ "$arg" = "--" ]; then
+     prefix=""
+   else
+-    sed -n 's/^[#%][#%]* *PKG_ADD: *//p' "$prefix$arg"
++    gsed -n 's/^[#%][#%]* *PKG_ADD: *//p' "$prefix$arg"
+   fi
+ done
