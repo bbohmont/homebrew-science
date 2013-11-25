@@ -53,27 +53,45 @@ class Octave < Formula
   depends_on :libtool => :build
 
   def patches
-    # Pull upstream patch to fix configure script on std::unordered_map
-    # detection.
-    'http://hg.savannah.gnu.org/hgweb/octave/raw-rev/26b2983a8acd'
     # MacPorts patches
-    # 1) fix std::unordered map
-    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-configure.diff' }
-    # 2) static keywords a problem with clang 3.0 or later
-    # https://mailman.cae.wisc.edu/pipermail/octave-maintainers/2012-June/028505.html
-    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-eigs-base.cc.diff' }
-    # 3) fix type declaration from struct to class
-    { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-regexp.h.diff' }
-
-    # 10.7+ requires an extra patch; this patch will break the
-    # build on 10.6 and prior, so apply it only under 10.7.
+    macports = [
+                 "https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-configure.diff",
+                 "https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-eigs-base.cc.diff",
+                 "https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-regexp.h.diff",
+               ]
     if MacOS.version >= :lion
-      { :p0 => 'https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-src-display.cc.diff' }
+      macports.push("https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-src-display.cc.diff")
     end
+    patch = { :p0 => macports,
+              :p1 => [
+              "http://hg.savannah.gnu.org/hgweb/octave/raw-rev/26b2983a8acd",
+              DATA
+              ],
+            }
 
-    # Force scripts/mk-pkg-add to use gsed
-    # Unknown as to why it forgets the SED='/usr/local/bin/gsed'
-    DATA
+    #patch = { :p0 => [
+              ## 1) fix std::unordered map
+              ##"https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-configure.diff",
+              ## 2) static keywords a problem with clang 3.0 or later
+              ## From https://mailman.cae.wisc.edu/pipermail/octave-maintainers/2012-June/028505.html
+              #"https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-eigs-base.cc.diff",
+              ## 3) fix type declaration from struct to class
+              #"https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-liboctave-regexp.h.diff",
+              #],
+              #:p1 => [
+              ## Pull upstream patch to fix configure script on std::unordered_map detection.
+              #"http://hg.savannah.gnu.org/hgweb/octave/raw-rev/26b2983a8acd",
+              ## Force scripts/mk-pkg-add to use gsed
+              ## Unknown as to why it forgets the SED='/usr/local/bin/gsed'
+              #DATA
+              #]
+            #}
+
+    ## 10.7+ requires an extra patch; this patch will break the
+    ## build on 10.6 and prior, so apply it only under 10.7.
+    #if MacOS.version >= :lion
+      #patch[:p0] << "https://svn.macports.org/repository/macports/trunk/dports/math/octave-devel/files/patch-src-display.cc.diff"
+    #end
   end
 
   def blas_flags
@@ -93,12 +111,12 @@ class Octave < Formula
       "--disable-dependency-tracking",
       "--prefix=#{prefix}",
       "--with-blas=#{blas_flags}",
-      "--without-x",
+      "--with-x",
       "--enable-docs=no",
       # SuiteSparse-4.x.x fix, see http://savannah.gnu.org/bugs/?37031
       "--with-umfpack=-lumfpack -lsuitesparseconfig",
       # Use the keg-only glpk-4.48
-      "--with-glpk='-lglpk'",
+      "--with-glpk=glpk",
       "--with-glpk-includedir=#{HOMEBREW_PREFIX}/opt/glpk448/include",
       "--with-glpk-libdir=#{HOMEBREW_PREFIX}/opt/glpk448/lib",
     ]
@@ -114,12 +132,15 @@ class Octave < Formula
     end
 
     # Use the keg-only readline and llvm from Homebrew
-    args << "LDFLAGS='-L#{HOMEBREW_PREFIX}/opt/readline/lib -L#{HOMEBREW_PREFIX}/opt/llvm/lib'"
-    args << "CPPFLAGS='-I#{HOMEBREW_PREFIX}/opt/readline/include -I#{HOMEBREW_PREFIX}/opt/llvm/include'"
+    args << "LDFLAGS=-L#{HOMEBREW_PREFIX}/opt/readline/lib -L#{HOMEBREW_PREFIX}/opt/llvm/lib"
+    args << "CPPFLAGS=-I#{HOMEBREW_PREFIX}/opt/readline/include -I#{HOMEBREW_PREFIX}/opt/llvm/include"
 
     # Find llvm-config executable
-    args << "LLVM_CONFIG='#{HOMEBREW_PREFIX}/Cellar/llvm/3.3/bin'"
+    args << "LLVM_CONFIG=#{HOMEBREW_PREFIX}/Cellar/llvm/3.3/bin"
 
+    # Find gs executable
+    # From http://octave.1599824.n4.nabble.com/MXE-Octave-Cannot-find-Ghostscript-td4655045.html
+    args << "GS=#{HOMEBREW_PREFIX}/bin"
 
     # From MacPorts:
     # In 10.8+, the LANG environment variable needs to be set to
@@ -134,7 +155,7 @@ class Octave < Formula
     system "autoreconf", "-ivf"
 
     system "./configure", *args
-    system "make all", "LANG=C"
+    system "env LANG=C make"
     system "make check 2>&1 | tee make-check.log" if build.include? 'test'
     system "make install"
 
